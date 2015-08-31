@@ -29,7 +29,7 @@ public class ForLoop implements Iterator<Object> {
   private int length = NULL_VALUE;
   private boolean first = true;
   private boolean last;
-  
+
   private int depth;
 
   private Iterator<?> it;
@@ -60,6 +60,7 @@ public class ForLoop implements Iterator<Object> {
     }
   }
 
+  @Override
   public Object next() {
     Object res;
     if (it.hasNext()) {
@@ -88,7 +89,7 @@ public class ForLoop implements Iterator<Object> {
   public int getIndex() {
     return index + 1;
   }
-  
+
   public int getIndex0() {
     return index;
   }
@@ -96,11 +97,11 @@ public class ForLoop implements Iterator<Object> {
   public int getDepth() {
     return depth + 1;
   }
-  
+
   public int getDepth0() {
     return depth;
   }
-  
+
   public int getCounter() {
     return counter;
   }
@@ -108,7 +109,7 @@ public class ForLoop implements Iterator<Object> {
   public int getRevindex() {
     return getRevindex0() + 1;
   }
-  
+
   public int getRevindex0() {
     if (revindex == NULL_VALUE) {
       ENGINE_LOG.warn("can't compute items' length while looping.");
@@ -147,7 +148,7 @@ public class ForLoop implements Iterator<Object> {
     int i = getIndex0() % items.length;
     return items[i];
   }
-  
+
   @Override
   public void remove() {
     throw new UnsupportedOperationException();

@@ -1,85 +1,155 @@
 /**********************************************************************
-Copyright (c) 2014 HubSpot Inc.
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
+ * Copyright (c) 2014 HubSpot Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  **********************************************************************/
 package com.hubspot.jinjava.tree;
 
-import static com.hubspot.jinjava.parse.ParserConstants.TOKEN_ECHO;
-import static com.hubspot.jinjava.parse.ParserConstants.TOKEN_FIXED;
-import static com.hubspot.jinjava.parse.ParserConstants.TOKEN_NOTE;
-import static com.hubspot.jinjava.parse.ParserConstants.TOKEN_TAG;
+import static com.hubspot.jinjava.tree.parse.TokenScannerSymbols.TOKEN_EXPR_START;
+import static com.hubspot.jinjava.tree.parse.TokenScannerSymbols.TOKEN_FIXED;
+import static com.hubspot.jinjava.tree.parse.TokenScannerSymbols.TOKEN_NOTE;
+import static com.hubspot.jinjava.tree.parse.TokenScannerSymbols.TOKEN_TAG;
 
-import com.hubspot.jinjava.interpret.InterpretException;
+import org.apache.commons.lang3.StringUtils;
+
+import com.google.common.collect.Iterators;
+import com.google.common.collect.PeekingIterator;
+import com.hubspot.jinjava.interpret.JinjavaInterpreter;
+import com.hubspot.jinjava.interpret.MissingEndTagException;
 import com.hubspot.jinjava.interpret.TemplateError;
-import com.hubspot.jinjava.parse.EchoToken;
-import com.hubspot.jinjava.parse.FixedToken;
-import com.hubspot.jinjava.parse.ParseException;
-import com.hubspot.jinjava.parse.TagToken;
-import com.hubspot.jinjava.parse.Token;
-import com.hubspot.jinjava.parse.TokenParser;
+import com.hubspot.jinjava.interpret.TemplateSyntaxException;
+import com.hubspot.jinjava.interpret.UnexpectedTokenException;
+import com.hubspot.jinjava.interpret.UnknownTagException;
+import com.hubspot.jinjava.lib.tag.EndTag;
+import com.hubspot.jinjava.lib.tag.Tag;
+import com.hubspot.jinjava.tree.parse.ExpressionToken;
+import com.hubspot.jinjava.tree.parse.TagToken;
+import com.hubspot.jinjava.tree.parse.TextToken;
+import com.hubspot.jinjava.tree.parse.Token;
+import com.hubspot.jinjava.tree.parse.TokenScanner;
 
-public final class TreeParser {
+public class TreeParser {
 
-  private TreeParser() {
+  private final PeekingIterator<Token> scanner;
+  private final JinjavaInterpreter interpreter;
+
+  private Node parent;
+
+  public TreeParser(JinjavaInterpreter interpreter, String input) {
+    this.scanner = Iterators.peekingIterator(new TokenScanner(input, interpreter.getConfig()));
+    this.interpreter = interpreter;
   }
 
-  public static Node parseTree(TokenParser parser) {
+  public Node buildTree() {
     Node root = new RootNode();
-    tree(root, parser, RootNode.TREE_ROOT_END);
+
+    parent = root;
+
+    while (scanner.hasNext()) {
+      Node node = nextNode();
+      if (node != null) {
+        parent.getChildren().add(node);
+      }
+    }
+
+    if (parent != root) {
+      interpreter.addError(TemplateError.fromException(
+          new MissingEndTagException(((TagNode) parent).getEndName(), parent.getMaster().getImage(), parent.getLineNumber())));
+    }
+
     return root;
   }
 
-  private static void tree(Node node, TokenParser parser, String endName) {
-    Token token;
-    TagToken tag;
-    while (parser.hasNext()) {
-      token = parser.next();
-      switch (token.getType()) {
-      case TOKEN_FIXED:
-        TextNode tn = new TextNode((FixedToken) token);
-        node.add(tn);
-        break;
-      case TOKEN_NOTE:
-        break;
-      case TOKEN_ECHO:
-        VariableNode vn = new VariableNode((EchoToken) token);
-        node.add(vn);
-        break;
-      case TOKEN_TAG:
-        tag = (TagToken) token;
-        if (tag.getTagName().equalsIgnoreCase(endName)) {
-          return;
-        }
-        try {
-          TagNode tg = new TagNode((TagToken) token, parser.getInterpreter());
-          node.add(tg);
-          if (tg.getEndName() != null) {
-            tree(tg, parser, tg.getEndName());
-          }
-        } catch (ParseException e) {
-          parser.getInterpreter().addError(TemplateError.fromSyntaxError(new InterpretException("Can't create node with token " + token, e, node.getLineNumber())));
-        }
-        break;
-      default:
-        parser.getInterpreter().addError(TemplateError.fromSyntaxError(new InterpretException("Unknown type token: " + token, node.getLineNumber())));
+  /**
+   * @return null if EOF or error
+   */
+  private Node nextNode() {
+    Token token = scanner.next();
+
+    switch (token.getType()) {
+    case TOKEN_FIXED:
+      return text((TextToken) token);
+
+    case TOKEN_EXPR_START:
+      return expression((ExpressionToken) token);
+
+    case TOKEN_TAG:
+      return tag((TagToken) token);
+
+    case TOKEN_NOTE:
+      break;
+
+    default:
+      interpreter.addError(TemplateError.fromException(new UnexpectedTokenException(token.getImage(), token.getLineNumber())));
+    }
+
+    return null;
+  }
+
+  private Node text(TextToken textToken) {
+    if (interpreter.getConfig().isLstripBlocks()) {
+      if (scanner.hasNext() && scanner.peek().getType() == TOKEN_TAG) {
+        textToken = new TextToken(StringUtils.stripEnd(textToken.getImage(), "\t "), textToken.getLineNumber());
       }
     }
-    // can't reach end tag
-    if (endName != null && !endName.equals(RootNode.TREE_ROOT_END)) {
-      parser.getInterpreter().addError(TemplateError.fromSyntaxError(
-          new InterpretException(String.format("Couldn't find end tag '%s' for tag defined on line %s as: %s", 
-              endName, node.getLineNumber(), node.toString()), node.getLineNumber())));
+
+    TextNode n = new TextNode(textToken);
+    n.setParent(parent);
+    return n;
+  }
+
+  private Node expression(ExpressionToken expressionToken) {
+    ExpressionNode n = new ExpressionNode(expressionToken);
+    n.setParent(parent);
+    return n;
+  }
+
+  private Node tag(TagToken tagToken) {
+    Tag tag = interpreter.getContext().getTag(tagToken.getTagName());
+    if (tag == null) {
+      interpreter.addError(TemplateError.fromException(new UnknownTagException(tagToken)));
+      return null;
+    }
+
+    if (tag instanceof EndTag) {
+      endTag(tag, tagToken);
+      return null;
+    }
+
+    TagNode node = new TagNode(tag, tagToken);
+    node.setParent(parent);
+
+    if (node.getEndName() != null) {
+      parent.getChildren().add(node);
+      parent = node;
+      return null;
+    }
+
+    return node;
+  }
+
+  private void endTag(Tag tag, TagToken tagToken) {
+    while (!(parent instanceof RootNode)) {
+      TagNode parentTag = (TagNode) parent;
+      parent = parent.getParent();
+
+      if (parentTag.getEndName().equals(tag.getEndTagName())) {
+        break;
+      } else {
+        interpreter.addError(TemplateError.fromException(
+            new TemplateSyntaxException(tagToken.getImage(), "Mismatched end tag, expected: " + parentTag.getEndName(), tagToken.getLineNumber())));
+      }
     }
   }
+
 }

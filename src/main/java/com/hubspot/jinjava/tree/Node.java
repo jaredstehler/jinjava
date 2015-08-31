@@ -16,20 +16,23 @@ limitations under the License.
 package com.hubspot.jinjava.tree;
 
 import java.io.Serializable;
+import java.util.LinkedList;
+
+import org.apache.commons.lang3.StringUtils;
 
 import com.hubspot.jinjava.interpret.JinjavaInterpreter;
-import com.hubspot.jinjava.parse.Token;
+import com.hubspot.jinjava.tree.parse.Token;
 
-public abstract class Node implements Serializable, Cloneable {
+public abstract class Node implements Serializable {
 
   private static final long serialVersionUID = 7323842986596895498L;
 
-  private int level = 0;
-  private int lineNumber = 0;
+  private int level;
+  private int lineNumber;
+
   private Node parent = null;
-  private Node predecessor = null;
-  private Node successor = null;
-  private NodeList children = new NodeList();
+  private LinkedList<Node> children = new LinkedList<Node>();
+
   private Token master;
 
   public Node(Token master, int lineNumber) {
@@ -40,7 +43,7 @@ public abstract class Node implements Serializable, Cloneable {
   public int getLevel() {
     return level;
   }
-  
+
   public Node getParent() {
     return parent;
   }
@@ -48,71 +51,32 @@ public abstract class Node implements Serializable, Cloneable {
   public void setParent(Node parent) {
     this.parent = parent;
   }
-  
-  public Node getPredecessor() {
-    return predecessor;
-  }
 
-  public void setPredecessor(Node predecessor) {
-    this.predecessor = predecessor;
-  }
-  
-  public Node getSuccessor() {
-    return successor;
-  }
-
-  public void setSuccessor(Node successor) {
-    this.successor = successor;
-  }
-  
   public Token getMaster() {
     return master;
   }
-  
+
   public int getLineNumber() {
     return lineNumber;
   }
 
-  public NodeList getChildren() {
+  public LinkedList<Node> getChildren() {
     return children;
   }
-  
-  public void setChildren(NodeList children) {
+
+  public void setChildren(LinkedList<Node> children) {
     this.children = children;
   }
 
-  @Override
-  public abstract Node clone();
-
   /**
    * trusty call by TreeParser
-   * 
+   *
    * @param node
    */
   void add(Node node) {
     node.level = level + 1;
     node.parent = this;
     children.add(node);
-  }
-
-  Node treeNext() {
-    if (children.size > 0) {
-      return children.head;
-    } else {
-      return recursiveNext();
-    }
-  }
-
-  Node recursiveNext() {
-    if (successor != null) {
-      return successor;
-    } else {
-      if (parent != null) {
-        return parent.recursiveNext();
-      } else {
-        return null;
-      }
-    }
   }
 
   void computeLevel(int baseLevel) {
@@ -125,5 +89,24 @@ public abstract class Node implements Serializable, Cloneable {
   public abstract String render(JinjavaInterpreter interpreter);
 
   public abstract String getName();
+
+  public String toTreeString() {
+    return toTreeString(0);
+  }
+
+  public String toTreeString(int level) {
+    String prefix = StringUtils.repeat(" ", level * 4) + " ";
+    StringBuilder t = new StringBuilder(prefix).append(toString()).append('\n');
+
+    for (Node n : getChildren()) {
+      t.append(n.toTreeString(level + 1));
+    }
+
+    if (getChildren().size() > 0) {
+      t.append(prefix).append("end :: " + toString()).append('\n');
+    }
+
+    return t.toString();
+  }
 
 }

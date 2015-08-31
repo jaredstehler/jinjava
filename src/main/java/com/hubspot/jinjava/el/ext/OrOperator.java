@@ -11,10 +11,10 @@ public class OrOperator implements Operator {
   @Override
   public Object eval(Bindings bindings, ELContext context, AstNode left, AstNode right) {
     Object leftResult = left.eval(bindings, context);
-    if(bindings.convert(leftResult, Boolean.class)) {
+    if (bindings.convert(leftResult, Boolean.class)) {
       return leftResult;
     }
-    
+
     return right.eval(bindings, context);
   }
 

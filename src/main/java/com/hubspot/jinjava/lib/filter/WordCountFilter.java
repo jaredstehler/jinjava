@@ -4,8 +4,19 @@ import java.util.Objects;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import com.hubspot.jinjava.doc.annotations.JinjavaDoc;
+import com.hubspot.jinjava.doc.annotations.JinjavaSnippet;
 import com.hubspot.jinjava.interpret.JinjavaInterpreter;
 
+@JinjavaDoc(
+    value = "Counts the words in the given string",
+    snippets = {
+        @JinjavaSnippet(
+            code = "{%  set count_words = \"Count the number of words in this variable\" %}\n" +
+                "{{ count_words|wordcount }}"
+        )
+
+    })
 public class WordCountFilter implements Filter {
 
   @Override
@@ -18,11 +29,11 @@ public class WordCountFilter implements Filter {
     Matcher matcher = WORD_RE.matcher(Objects.toString(var, ""));
 
     int count = 0;
-    
-    while(matcher.find()) {
+
+    while (matcher.find()) {
       count++;
     }
-    
+
     return count;
   }
 

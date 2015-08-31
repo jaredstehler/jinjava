@@ -2,9 +2,9 @@ package com.hubspot.jinjava.benchmarks.jinja2;
 
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
+import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 import java.util.Date;
-
-import org.joda.time.DateTime;
 
 import de.svenjacobs.loremipsum.LoremIpsum;
 
@@ -17,18 +17,18 @@ public class Article {
   private String body;
   private Date pubDate;
   private boolean published;
-  
+
   public Article(int id, User user) throws NoSuchAlgorithmException {
     this.id = id;
     this.href = "/article/" + id;
-    
+
     LoremIpsum ipsum = new LoremIpsum();
     SecureRandom rnd = SecureRandom.getInstanceStrong();
-    
+
     this.title = ipsum.getWords(10);
     this.user = user;
     this.body = ipsum.getParagraphs();
-    this.pubDate = DateTime.now().minusHours(rnd.nextInt(128)).toDate(); // TODO randomize
+    this.pubDate = Date.from(LocalDateTime.now().minusHours(rnd.nextInt(128)).toInstant(ZoneOffset.UTC)); // TODO randomize
     this.published = true;
   }
 
@@ -59,5 +59,5 @@ public class Article {
   public boolean isPublished() {
     return published;
   }
-  
+
 }

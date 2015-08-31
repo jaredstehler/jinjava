@@ -24,17 +24,17 @@ public class AstMacroFunction extends AstFunction {
     JinjavaInterpreter interpreter = (JinjavaInterpreter) context.getELResolver().getValue(context, null, ExtendedParser.INTERPRETER);
 
     MacroFunction macroFunction = interpreter.getContext().getGlobalMacro(getName());
-    if(macroFunction != null) {
+    if (macroFunction != null) {
       try {
-        return super.invoke(bindings, context, macroFunction, MacroFunction.EVAL_METHOD);
+        return super.invoke(bindings, context, macroFunction, AbstractCallableMethod.EVAL_METHOD);
       } catch (IllegalAccessException e) {
         throw new ELException(LocalMessages.get("error.function.access", getName()), e);
       } catch (InvocationTargetException e) {
         throw new ELException(LocalMessages.get("error.function.invocation", getName()), e.getCause());
       }
     }
-    
+
     return super.eval(bindings, context);
   }
-  
+
 }

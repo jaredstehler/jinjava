@@ -13,15 +13,15 @@ public class ExtendedScanner extends Scanner {
   protected ExtendedScanner(String input) {
     super(input);
   }
-  
+
   @Override
   public Token next() throws ScanException {
     if (getToken() != null) {
       incrPosition(getToken().getSize());
     }
-  
+
     int length = getInput().length();
-        
+
     if (isEval()) {
       while (getPosition() < length && isWhitespace(getInput().charAt(getPosition()))) {
         incrPosition(1);
@@ -29,14 +29,14 @@ public class ExtendedScanner extends Scanner {
     }
 
     Token token = null;
-    
+
     if (getPosition() == length) {
       token = fixed(Symbol.EOF);
     }
     else {
       token = nextToken();
     }
-    
+
     setToken(token);
     return token;
   }
@@ -44,7 +44,7 @@ public class ExtendedScanner extends Scanner {
   protected boolean isWhitespace(char c) {
     return Character.isWhitespace(c) || Character.isSpaceChar(c);
   }
-  
+
   private static final Method ADD_KEY_TOKEN_METHOD;
   private static final Field TOKEN_FIELD;
   private static final Field POSITION_FIELD;
@@ -60,15 +60,15 @@ public class ExtendedScanner extends Scanner {
       throw Throwables.propagate(e);
     }
   }
-  
+
   protected static void addKeyToken(Token token) {
     try {
       ADD_KEY_TOKEN_METHOD.invoke(null, token);
-    } catch(IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
+    } catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
       throw Throwables.propagate(e);
     }
   }
-  
+
   protected void setToken(Token token) {
     try {
       TOKEN_FIELD.set(this, token);
@@ -80,16 +80,16 @@ public class ExtendedScanner extends Scanner {
   protected void incrPosition(int n) {
     try {
       POSITION_FIELD.set(this, getPosition() + n);
-    } catch(IllegalArgumentException | IllegalAccessException e) {
+    } catch (IllegalArgumentException | IllegalAccessException e) {
       throw Throwables.propagate(e);
     }
   }
-  
+
   @Override
   protected Token nextToken() throws ScanException {
     if (isEval()) {
       if (getInput().charAt(getPosition()) == '}') {
-        if(getPosition() < getInput().length() - 1) {
+        if (getPosition() < getInput().length() - 1) {
           return ExtendedParser.LITERAL_DICT_END;
         }
         else {
@@ -98,50 +98,50 @@ public class ExtendedScanner extends Scanner {
       }
       return nextEval();
     } else {
-      if (getPosition()+1 < getInput().length() && getInput().charAt(getPosition()+1) == '{') {
+      if (getPosition() + 1 < getInput().length() && getInput().charAt(getPosition() + 1) == '{') {
         switch (getInput().charAt(getPosition())) {
-          case '#':
-            return fixed(Symbol.START_EVAL_DEFERRED);
-          case '$':
-            return fixed(Symbol.START_EVAL_DYNAMIC);
+        case '#':
+          return fixed(Symbol.START_EVAL_DEFERRED);
+        case '$':
+          return fixed(Symbol.START_EVAL_DYNAMIC);
         }
       }
       return nextText();
     }
   }
-  
+
   @Override
   protected Token nextEval() throws ScanException {
     char c1 = getInput().charAt(getPosition());
-    char c2 = getPosition() < getInput().length()-1 ? getInput().charAt(getPosition()+1) : (char)0;
-    
-    if(c1 == '|' && c2 != '|') {
+    char c2 = getPosition() < getInput().length() - 1 ? getInput().charAt(getPosition() + 1) : (char) 0;
+
+    if (c1 == '|' && c2 != '|') {
       return ExtendedParser.PIPE;
     }
-    if(c1 == '+' && Character.isDigit(c2)) {
+    if (c1 == '+' && Character.isDigit(c2)) {
       return AbsOperator.TOKEN;
     }
-    if(c1 == '=' && c2 != '=') {
+    if (c1 == '=' && c2 != '=') {
       return NamedParameterOperator.TOKEN;
     }
-    if(c1 == '{') {
+    if (c1 == '{') {
       return ExtendedParser.LITERAL_DICT_START;
     }
-    if(c1 == '}' && c2 != 0) {
+    if (c1 == '}' && c2 != 0) {
       return ExtendedParser.LITERAL_DICT_END;
     }
-    if(c1 == '~') {
+    if (c1 == '~') {
       return StringConcatOperator.TOKEN;
     }
-    
+
     return super.nextEval();
   }
-  
+
   @Override
   protected Token nextString() throws ScanException {
     builder.setLength(0);
     char quote = getInput().charAt(getPosition());
-    int i = getPosition()+1;
+    int i = getPosition() + 1;
     int l = getInput().length();
     while (i < l) {
       char c = getInput().charAt(i++);
@@ -150,13 +150,13 @@ public class ExtendedScanner extends Scanner {
           throw new ScanException(getPosition(), "unterminated string", quote + " or \\");
         } else {
           c = getInput().charAt(i++);
-          switch(c) {
+          switch (c) {
           case '\\':
           case '\'':
           case '"':
             builder.append(c);
             break;
-            
+
           case 'n':
             builder.append('\n');
             break;

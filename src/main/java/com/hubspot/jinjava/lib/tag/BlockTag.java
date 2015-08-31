@@ -17,6 +17,9 @@ package com.hubspot.jinjava.lib.tag;
 
 import java.util.List;
 
+import com.hubspot.jinjava.doc.annotations.JinjavaDoc;
+import com.hubspot.jinjava.doc.annotations.JinjavaParam;
+import com.hubspot.jinjava.doc.annotations.JinjavaSnippet;
 import com.hubspot.jinjava.interpret.InterpretException;
 import com.hubspot.jinjava.interpret.JinjavaInterpreter;
 import com.hubspot.jinjava.tree.TagNode;
@@ -25,11 +28,23 @@ import com.hubspot.jinjava.util.WhitespaceUtils;
 
 /**
  * {% block name %}
- * 
+ *
  */
-
+@JinjavaDoc(
+    value = "Blocks are regions in a template which can be overridden by child templates",
+    params = {
+        @JinjavaParam(value = "block_name", desc = "A unique name for the block that should be used in both the parent and child template")
+    },
+    snippets = {
+        @JinjavaSnippet(
+            code = "{% extends \"custom/page/web_page_basic/my_template.html\" %}\n" +
+                "{% block my_sidebar %}\n" +
+                "   <!--Content that will render within a block of the same name in the parent template-->\n" +
+                "{% endblock %}"),
+    })
 public class BlockTag implements Tag {
 
+  private static final long serialVersionUID = -2362317415797088108L;
   private static final String TAGNAME = "block";
   private static final String ENDTAGNAME = "endblock";
 
@@ -39,9 +54,9 @@ public class BlockTag implements Tag {
     if (helper.isEmpty()) {
       throw new InterpretException("Tag 'block' expects an identifier", tagNode.getLineNumber());
     }
-    
+
     String blockName = WhitespaceUtils.unquote(helper.get(0));
-    
+
     interpreter.addBlock(blockName, tagNode.getChildren());
     return JinjavaInterpreter.BLOCK_STUB_START + blockName + JinjavaInterpreter.BLOCK_STUB_END;
   }

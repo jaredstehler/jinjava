@@ -17,8 +17,10 @@ package com.hubspot.jinjava.lib;
 
 import static com.hubspot.jinjava.util.Logging.ENGINE_LOG;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import org.apache.commons.lang3.StringUtils;
@@ -30,7 +32,7 @@ public abstract class SimpleLibrary<T extends Importable> {
   private Map<String, T> lib = new HashMap<String, T>();
 
   protected SimpleLibrary(boolean registerDefaults) {
-    if(registerDefaults) {
+    if (registerDefaults) {
       registerDefaults();
     }
   }
@@ -42,20 +44,28 @@ public abstract class SimpleLibrary<T extends Importable> {
   }
 
   @SafeVarargs
-  public final void registerClasses(Class<? extends T>... itemClass) {
+  public final List<T> registerClasses(Class<? extends T>... itemClass) {
     try {
-      for(Class<? extends T> c : itemClass) {
+      List<T> instances = new ArrayList<>();
+
+      for (Class<? extends T> c : itemClass) {
         T instance = c.newInstance();
         register(instance);
+        instances.add(instance);
       }
-    }
-    catch(Exception e) {
+
+      return instances;
+    } catch (Exception e) {
       throw Throwables.propagate(e);
     }
   }
-  
+
   public void register(T obj) {
-    lib.put(obj.getName(), obj);
+    register(obj.getName(), obj);
+  }
+
+  public void register(String name, T obj) {
+    lib.put(name, obj);
     ENGINE_LOG.debug(getClass().getSimpleName() + ": Registered " + obj.getName());
   }
 

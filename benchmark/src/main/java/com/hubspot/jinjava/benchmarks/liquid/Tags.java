@@ -8,13 +8,15 @@ import com.hubspot.jinjava.tree.TagNode;
 /**
  * Liquid::Template.register_tag 'paginate', Paginate
  * Liquid::Template.register_tag 'form', CommentForm
- * 
+ *
  * @author jstehler
  *
  */
 public class Tags {
 
   public static class PaginateTag implements Tag {
+    private static final long serialVersionUID = -4143036883302838710L;
+
     @Override
     public String interpret(TagNode tagNode, JinjavaInterpreter interpreter) {
       return null;
@@ -30,14 +32,16 @@ public class Tags {
       return "endpaginate";
     }
   }
-  
+
   public static class CommentFormTag implements Tag {
+    private static final long serialVersionUID = 4740110980519195813L;
+
     @Override
     public String interpret(TagNode tagNode, JinjavaInterpreter interpreter) {
-      
+
       return null;
     }
-    
+
     @Override
     public String getName() {
       return "form";
@@ -48,28 +52,34 @@ public class Tags {
       return "endform";
     }
   }
-  
+
   public static class AssignTag extends SetTag {
+    private static final long serialVersionUID = -8045822376271136191L;
+
     @Override
     public String getName() {
       return "assign";
     }
   }
-  
+
   public static class TableRowTag implements Tag {
+    private static final long serialVersionUID = 7058892410901688159L;
+
     @Override
     public String interpret(TagNode tagNode, JinjavaInterpreter interpreter) {
       // TODO Auto-generated method stub
       return null;
     }
+
     @Override
     public String getName() {
       return "tablerow";
     }
+
     @Override
     public String getEndTagName() {
       return "endtablerow";
     }
   }
-  
+
 }

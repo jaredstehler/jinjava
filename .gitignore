@@ -2,7 +2,9 @@
 .classpath
 .project
 .settings/
+.externalToolBuilders/
 .factorypath
+.checkstyle
 
 # Intellij
 .idea/

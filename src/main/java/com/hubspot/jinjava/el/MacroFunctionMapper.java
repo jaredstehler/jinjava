@@ -7,9 +7,9 @@ import java.util.Map;
 
 import javax.el.FunctionMapper;
 
+import com.hubspot.jinjava.el.ext.AbstractCallableMethod;
 import com.hubspot.jinjava.interpret.JinjavaInterpreter;
 import com.hubspot.jinjava.lib.fn.MacroFunction;
-
 
 public class MacroFunctionMapper extends FunctionMapper {
 
@@ -18,11 +18,11 @@ public class MacroFunctionMapper extends FunctionMapper {
   @Override
   public Method resolveFunction(String prefix, String localName) {
     MacroFunction macroFunction = JinjavaInterpreter.getCurrent().getContext().getGlobalMacro(localName);
-    
-    if(macroFunction != null) {
-      return MacroFunction.EVAL_METHOD;
+
+    if (macroFunction != null) {
+      return AbstractCallableMethod.EVAL_METHOD;
     }
-    
+
     return map.get(prefix + ":" + localName);
   }
 

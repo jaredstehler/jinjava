@@ -4,12 +4,19 @@ import java.util.Objects;
 
 import org.apache.commons.lang3.StringUtils;
 
+import com.hubspot.jinjava.doc.annotations.JinjavaDoc;
+import com.hubspot.jinjava.doc.annotations.JinjavaSnippet;
 import com.hubspot.jinjava.interpret.JinjavaInterpreter;
 
 /**
- * trim(value)
- *   Strip leading and trailing whitespace.
+ * trim(value) Strip leading and trailing whitespace.
  */
+@JinjavaDoc(
+    value = "Strip leading and trailing whitespace.",
+    snippets = {
+        @JinjavaSnippet(
+            code = "{{ \" remove whitespace \"|trim }}")
+    })
 public class TrimFilter implements Filter {
 
   @Override

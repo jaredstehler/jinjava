@@ -8,25 +8,24 @@ import com.hubspot.jinjava.el.ext.AbstractCallableMethod;
 import com.hubspot.jinjava.interpret.Context;
 import com.hubspot.jinjava.interpret.JinjavaInterpreter;
 import com.hubspot.jinjava.tree.Node;
-import com.hubspot.jinjava.tree.NodeList;
 
 /**
  * Function definition parsed from a jinjava template, stored in global macros registry in interpreter context.
- * 
+ *
  * @author jstehler
  *
  */
 public class MacroFunction extends AbstractCallableMethod {
-  
-  private final NodeList content;
-  
+
+  private final List<Node> content;
+
   private final boolean catchKwargs;
   private final boolean catchVarargs;
   private final boolean caller;
 
   private final Context localContextScope;
-  
-  public MacroFunction(NodeList content, String name, LinkedHashMap<String, Object> argNamesWithDefaults,
+
+  public MacroFunction(List<Node> content, String name, LinkedHashMap<String, Object> argNamesWithDefaults,
       boolean catchKwargs, boolean catchVarargs, boolean caller, Context localContextScope) {
     super(name, argNamesWithDefaults);
     this.content = content;
@@ -43,37 +42,36 @@ public class MacroFunction extends AbstractCallableMethod {
     interpreter.enterScope();
 
     try {
-      for(Map.Entry<String, Object> scopeEntry : localContextScope.getScope().entrySet()){
-        if(scopeEntry.getValue() instanceof MacroFunction) {
+      for (Map.Entry<String, Object> scopeEntry : localContextScope.getScope().entrySet()) {
+        if (scopeEntry.getValue() instanceof MacroFunction) {
           interpreter.getContext().addGlobalMacro((MacroFunction) scopeEntry.getValue());
         }
         else {
           interpreter.getContext().put(scopeEntry.getKey(), scopeEntry.getValue());
         }
       }
-      
+
       // named parameters
-      for(Map.Entry<String, Object> argEntry : argMap.entrySet()) {
+      for (Map.Entry<String, Object> argEntry : argMap.entrySet()) {
         interpreter.getContext().put(argEntry.getKey(), argEntry.getValue());
       }
       // parameter map
       interpreter.getContext().put("kwargs", argMap);
       // varargs list
       interpreter.getContext().put("varargs", varArgs);
-      
+
       StringBuilder result = new StringBuilder();
-      
-      for(Node node : content) {
+
+      for (Node node : content) {
         result.append(node.render(interpreter));
       }
-      
+
       return result.toString();
-    }
-    finally {
+    } finally {
       interpreter.leaveScope();
     }
   }
-  
+
   public boolean isCatchKwargs() {
     return catchKwargs;
   }
@@ -81,9 +79,9 @@ public class MacroFunction extends AbstractCallableMethod {
   public boolean isCatchVarargs() {
     return catchVarargs;
   }
-  
+
   public boolean isCaller() {
     return caller;
   }
-  
+
 }

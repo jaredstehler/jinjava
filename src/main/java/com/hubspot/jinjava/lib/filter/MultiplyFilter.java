@@ -18,9 +18,23 @@ package com.hubspot.jinjava.lib.filter;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 
+import com.hubspot.jinjava.doc.annotations.JinjavaDoc;
+import com.hubspot.jinjava.doc.annotations.JinjavaParam;
+import com.hubspot.jinjava.doc.annotations.JinjavaSnippet;
 import com.hubspot.jinjava.interpret.InterpretException;
 import com.hubspot.jinjava.interpret.JinjavaInterpreter;
 
+@JinjavaDoc(
+    value = "Multiplies the current object with the given multiplier",
+    params = {
+        @JinjavaParam(value = "value", type = "number", desc = "Base number to be multiplied"),
+        @JinjavaParam(value = "multiplier", type = "number", desc = "The multiplier")
+    },
+    snippets = {
+        @JinjavaSnippet(
+            code = "{% set n = 20 %}\n" +
+                "{{ n|multiply(3) }}")
+    })
 public class MultiplyFilter implements Filter {
 
   @Override
@@ -28,15 +42,9 @@ public class MultiplyFilter implements Filter {
     if (arg.length != 1) {
       throw new InterpretException("filter multiply expects 1 arg >>> " + arg.length);
     }
-    Object toMul = arg[0];
-    Number num;
-    if (toMul instanceof String) {
-      num = new BigDecimal((String) toMul);
-    } else if (toMul instanceof Number) {
-      num = (Number) toMul;
-    } else {
-      return object;
-    }
+    String toMul = arg[0];
+    Number num = new BigDecimal(toMul);
+
     if (object instanceof Integer) {
       return num.intValue() * (Integer) object;
     }
@@ -63,7 +71,7 @@ public class MultiplyFilter implements Filter {
     }
     if (object instanceof String) {
       try {
-        return num.doubleValue() * Double.valueOf((String) object);
+        return num.doubleValue() * Double.parseDouble((String) object);
       } catch (Exception e) {
         throw new InterpretException(object + " can't be dealed with multiply filter", e);
       }

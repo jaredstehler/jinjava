@@ -17,11 +17,11 @@ package com.hubspot.jinjava.util;
 
 import java.util.Objects;
 
-
 public final class ObjectValue {
 
-  private ObjectValue(){}
-  
+  private ObjectValue() {
+  }
+
   public static String printable(Object variable) {
     return Objects.toString(variable, "");
   }

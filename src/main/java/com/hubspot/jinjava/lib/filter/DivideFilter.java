@@ -18,9 +18,23 @@ package com.hubspot.jinjava.lib.filter;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 
+import com.hubspot.jinjava.doc.annotations.JinjavaDoc;
+import com.hubspot.jinjava.doc.annotations.JinjavaParam;
+import com.hubspot.jinjava.doc.annotations.JinjavaSnippet;
 import com.hubspot.jinjava.interpret.InterpretException;
 import com.hubspot.jinjava.interpret.JinjavaInterpreter;
 
+@JinjavaDoc(
+    value = "Divides the current value by a divisor",
+    params = {
+        @JinjavaParam(value = "value", type = "number", desc = "The numerator to be divided"),
+        @JinjavaParam(value = "divisor", type = "number", desc = "The divisor to divide the value")
+    },
+    snippets = {
+        @JinjavaSnippet(
+            code = "{% set numerator = 106 %}\n" +
+                "{% numerator|divide(2) %}")
+    })
 public class DivideFilter implements Filter {
 
   @Override
@@ -28,12 +42,10 @@ public class DivideFilter implements Filter {
     if (arg.length != 1) {
       throw new InterpretException("filter multiply expects 1 arg >>> " + arg.length);
     }
-    Object toMul = arg[0];
+    String toMul = arg[0];
     Number num;
-    if (toMul instanceof String) {
-      num = new BigDecimal((String) toMul);
-    } else if (toMul instanceof Number) {
-      num = (Number) toMul;
+    if (toMul != null) {
+      num = new BigDecimal(toMul);
     } else {
       return object;
     }

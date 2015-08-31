@@ -17,27 +17,33 @@ package com.hubspot.jinjava.lib.tag;
 
 import org.apache.commons.lang3.StringUtils;
 
+import com.hubspot.jinjava.doc.annotations.JinjavaDoc;
+import com.hubspot.jinjava.doc.annotations.JinjavaSnippet;
 import com.hubspot.jinjava.interpret.InterpretException;
 import com.hubspot.jinjava.interpret.JinjavaInterpreter;
 import com.hubspot.jinjava.tree.Node;
 import com.hubspot.jinjava.tree.TagNode;
 
-/**
- * {% ifchange var %}
- * 
- * @author anysome
- * 
- */
+@JinjavaDoc(
+    value = "Outputs the tag contents if the given variable has changed since a prior invocation of this tag",
+    hidden = true,
+    snippets = {
+        @JinjavaSnippet(
+            code = "{% ifchanged var %}\n" +
+                "Variable to test if changed\n" +
+                "{% endifchanged %}")
+    })
 public class IfchangedTag implements Tag {
 
+  private static final long serialVersionUID = 3567908136629704724L;
   private static final String LASTKEY = "'IF\"CHG";
   private static final String TAGNAME = "ifchanged";
-  private static final String ENDTAGNAME = "endif";
+  private static final String ENDTAGNAME = "endifchanged";
 
   @Override
   public String interpret(TagNode tagNode, JinjavaInterpreter interpreter) {
     if (StringUtils.isBlank(tagNode.getHelpers())) {
-      throw new InterpretException("Tag 'ifchanged' expects 1 helper >>> 0", tagNode.getLineNumber());
+      throw new InterpretException("Tag 'ifchanged' expects a variable parameter", tagNode.getLineNumber());
     }
     boolean isChanged = true;
     String var = tagNode.getHelpers().trim();

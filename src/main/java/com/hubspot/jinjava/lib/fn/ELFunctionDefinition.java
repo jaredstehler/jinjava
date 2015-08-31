@@ -16,14 +16,13 @@ public class ELFunctionDefinition implements Importable {
     this.localName = localName;
     this.method = resolveMethod(methodClass, methodName, parameterTypes);
   }
-  
+
   private static Method resolveMethod(Class<?> methodClass, String methodName, Class<?>... parameterTypes) {
     try {
       Method m = methodClass.getDeclaredMethod(methodName, parameterTypes);
       m.setAccessible(true);
       return m;
-    }
-    catch(Exception e) {
+    } catch (Exception e) {
       throw Throwables.propagate(e);
     }
   }
@@ -33,6 +32,7 @@ public class ELFunctionDefinition implements Importable {
     this.localName = localName;
     this.method = method;
   }
+
   public String getNamespace() {
     return namespace;
   }
@@ -40,14 +40,14 @@ public class ELFunctionDefinition implements Importable {
   public String getLocalName() {
     return localName;
   }
-  
+
   @Override
   public String getName() {
     return namespace + ":" + localName;
   }
-  
+
   public Method getMethod() {
     return method;
   }
-  
+
 }

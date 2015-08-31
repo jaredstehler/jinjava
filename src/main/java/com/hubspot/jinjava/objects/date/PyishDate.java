@@ -1,88 +1,94 @@
 package com.hubspot.jinjava.objects.date;
 
 import java.io.Serializable;
+import java.time.Instant;
+import java.time.ZoneOffset;
+import java.time.ZonedDateTime;
+import java.time.temporal.ChronoField;
 import java.util.Date;
 import java.util.Objects;
+import java.util.Optional;
 
 import org.apache.commons.lang3.math.NumberUtils;
-import org.joda.time.DateTime;
-import org.joda.time.DateTimeZone;
 
-import com.google.common.base.Optional;
 import com.hubspot.jinjava.objects.PyWrapper;
 
 /**
  * an object which quacks like a python date
- * 
+ *
  * @author jstehler
  *
  */
 public final class PyishDate extends Date implements Serializable, PyWrapper {
   private static final long serialVersionUID = 1L;
 
-  private final DateTime date;
+  private final ZonedDateTime date;
 
-  public PyishDate(Date d) {
-    this(new DateTime(Objects.requireNonNull(d), DateTimeZone.UTC));
-  }
-  
-  public PyishDate(DateTime dt) {
-    super(Objects.requireNonNull(dt).getMillis());
+  public PyishDate(ZonedDateTime dt) {
+    super(dt.toInstant().toEpochMilli());
     this.date = dt;
   }
 
-  public PyishDate(Long publishDate) {
-    this(new DateTime(Optional.fromNullable(publishDate).or(System.currentTimeMillis()), DateTimeZone.UTC));
+  public PyishDate(Date d) {
+    this(ZonedDateTime.ofInstant(d.toInstant(), ZoneOffset.UTC));
   }
 
   public PyishDate(String publishDateStr) {
     this(NumberUtils.toLong(Objects.requireNonNull(publishDateStr), 0L));
   }
-  
+
+  public PyishDate(Long epochMillis) {
+    this(ZonedDateTime.ofInstant(Instant.ofEpochMilli(
+        Optional.ofNullable(epochMillis).orElseGet(System::currentTimeMillis)), ZoneOffset.UTC));
+  }
+
   public String isoformat() {
-    return strftime("YYYY-MM-DD");
+    return strftime("yyyy-MM-dd");
   }
 
   public String strftime(String fmt) {
     return StrftimeFormatter.format(date, fmt);
   }
-  
+
+  @Override
   public int getYear() {
     return date.getYear();
   }
-  
+
+  @Override
   public int getMonth() {
-    return date.getMonthOfYear();
+    return date.getMonthValue();
   }
-  
+
+  @Override
   public int getDay() {
     return date.getDayOfMonth();
   }
-  
+
   public int getHour() {
-    return date.getHourOfDay();
-  }
-  
-  public int getMinute() {
-    return date.getMinuteOfHour();
-  }
-  
-  public int getSecond() {
-    return date.getSecondOfMinute();
-  }
-  
-  public int getMicrosecond() {
-    return date.getMillisOfSecond();
-  }
-  
-  public Date toDate() {
-    return date.toDate();
+    return date.getHour();
   }
 
-  public DateTime toDateTime() {
+  public int getMinute() {
+    return date.getMinute();
+  }
+
+  public int getSecond() {
+    return date.getSecond();
+  }
+
+  public int getMicrosecond() {
+    return date.get(ChronoField.MILLI_OF_SECOND);
+  }
+
+  public Date toDate() {
+    return Date.from(date.toInstant());
+  }
+
+  public ZonedDateTime toDateTime() {
     return date;
   }
-  
+
   @Override
   public String toString() {
     return strftime("yyyy-MM-dd HH:mm:ss");
@@ -90,15 +96,19 @@ public final class PyishDate extends Date implements Serializable, PyWrapper {
 
   @Override
   public int hashCode() {
-    return com.google.common.base.Objects.hashCode(date.getMillis());
+    return Objects.hashCode(date);
   }
 
   @Override
   public boolean equals(Object obj) {
-    if (this == obj) return true;
-    if (obj == null || getClass() != obj.getClass()) return false;
+    if (this == obj) {
+      return true;
+    }
+    if (obj == null || getClass() != obj.getClass()) {
+      return false;
+    }
     PyishDate that = (PyishDate) obj;
-    return com.google.common.base.Objects.equal(toDateTime().getMillis(), that.toDateTime().getMillis());
+    return Objects.equals(toDateTime(), that.toDateTime());
   }
 
 }
